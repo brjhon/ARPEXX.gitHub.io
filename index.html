@@ -4,39 +4,81 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ARPEX</title>
+  <style>
+    /* Remove margens e faz html/body terem 100% da altura */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    /* Faz o vídeo ocupar toda a viewport */
+    video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;   /* centered crop se proporções não baterem */
+      cursor: pointer;
+      background: #000;
+    }
+    /* Mensagem inicial */
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
-  <h2>Stream da Câmera - ARPEX</h2>
-  <video id="video" controls style="width:100%;max-width:720px"></video>
+  <div id="loading">Clique no vídeo para iniciar em tela cheia</div>
+  <video id="video" controls muted></video>
 
-  <!-- Biblioteca hls.js -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const video = document.getElementById('video');
-    // ← Cole aqui o link correto, sem concatenações inválidas
-    const url = 'https://https://dvr-br1.hostlink.com//cam-d6e2a5d417/index.m3u8?token=3.J2RNAwSBAAAAAAAAAAIABhv1zHFuRYUYeQQ4hMVFh-5rSSQYvLtKN5zJ';
+    const loading = document.getElementById('loading');
+    const cameras = [
+      'https://https://dvr-br1.hostlink.com//cam-d6e2a5d417/index.m3u8?token=3.J2RNAwSBAAAAAAAAAAIABhv1zHFuRYUYeQQ4hMVFh-5rSSQYvLtKN5zJ',
 
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    ];
+    let hls, started = false;
+
+    function loadCamera(url) {
+      if (hls) hls.destroy();
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.attachMedia(video);
+        hls.loadSource(url);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      } else {
+        video.src = url;
         video.play();
-      });
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('HLS.js error:', data);
-      });
+      }
     }
-    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari (suporta HLS nativamente)
-      video.src = url;
-      video.addEventListener('loadedmetadata', () => {
-        video.play();
-      });
+
+    function goFullscreen() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) el.msRequestFullscreen();
     }
-    else {
-      alert('Este navegador não suporta HLS.');
-    }
+
+    video.addEventListener('click', () => {
+      if (started) return;
+      started = true;
+      loading.style.display = 'none';
+      loadCamera(cameras[0]);
+      goFullscreen();
+      video.muted = false;
+      video.controls = true;
+    }, { once: true });
   </script>
 </body>
 </html>
