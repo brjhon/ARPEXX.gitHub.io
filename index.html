@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ARPEX</title>
+</head>
+<body>
+  <h2>Stream da Câmera - ARPEX</h2>
+  <video id="video" controls style="width:100%;max-width:720px"></video>
+
+  <!-- Biblioteca hls.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+    // ← Cole aqui o link correto, sem concatenações inválidas
+    const url = 'https://https://dvr-br1.hostlink.com//cam-d6e2a5d417/index.m3u8?token=3.J2RNAwSBAAAAAAAAAAIABhv1zHFuRYUYeQQ4hMVFh-5rSSQYvLtKN5zJ';
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play();
+      });
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('HLS.js error:', data);
+      });
+    }
+    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari (suporta HLS nativamente)
+      video.src = url;
+      video.addEventListener('loadedmetadata', () => {
+        video.play();
+      });
+    }
+    else {
+      alert('Este navegador não suporta HLS.');
+    }
+  </script>
+</body>
+</html>
